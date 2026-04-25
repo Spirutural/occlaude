@@ -32,21 +32,26 @@ if opts.h or opts.help then usage(); return end
 
 local INSTALLROOT_PATH = "/home/.occlaude.installroot"
 
-local function do_update()
-  if not fs.exists(INSTALLROOT_PATH) then
-    io.write("No saved install root at " .. INSTALLROOT_PATH .. ".\n")
-    io.write("Re-run install.lua manually:\n")
-    io.write("  install.lua https://raw.githubusercontent.com/<you>/occlaude/main\n")
-    os.exit(1)
+local function do_update(override_base)
+  local base
+  if override_base and override_base ~= "" then
+    base = override_base:gsub("/+$", "")
+    io.write("Updating from " .. base .. " (override) ...\n")
+  else
+    if not fs.exists(INSTALLROOT_PATH) then
+      io.write("No saved install root at " .. INSTALLROOT_PATH .. ".\n")
+      io.write("Pass the URL explicitly:  occlaude --update <base-url>\n")
+      io.write("Or run install.lua <base-url> manually.\n")
+      os.exit(1)
+    end
+    local rf = io.open(INSTALLROOT_PATH, "r")
+    base = ((rf:read("*l") or ""):gsub("%s+$", ""):gsub("^%s+", ""))
+    rf:close()
+    if base == "" then
+      io.write("Install root file is empty.\n"); os.exit(1)
+    end
+    io.write("Updating from " .. base .. " ...\n")
   end
-  local rf = io.open(INSTALLROOT_PATH, "r")
-  local base = ((rf:read("*l") or ""):gsub("%s+$", ""):gsub("^%s+", ""))
-  rf:close()
-  if base == "" then
-    io.write("Install root file is empty.\n"); os.exit(1)
-  end
-
-  io.write("Updating from " .. base .. " ...\n")
 
   local ok = shell.execute("wget -fq " .. base .. "/install.lua /home/install.lua")
   if not ok then io.write("Failed to fetch install.lua\n"); os.exit(1) end
@@ -58,7 +63,10 @@ local function do_update()
   os.exit(0)
 end
 
-if opts.update then do_update() end
+if opts.update then
+  local override = (type(opts.update) == "string") and opts.update or args[1]
+  do_update(override)
+end
 
 ----------------------------------------------------------------------
 -- Normal startup

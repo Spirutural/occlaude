@@ -84,7 +84,21 @@ After the first install, `install.lua` writes the install root to `/home/.occlau
 occlaude --update
 ```
 
-It re-fetches `install.lua` and runs it, so adding new files to the project just works as long as `install.lua`'s manifest stays current. Restart `occlaude` to pick up changes (the running process keeps the old code in memory).
+It re-fetches `install.lua` and runs it, so adding new files to the project just works as long as `install.lua`'s manifest stays current. `install.lua` is in its own manifest, so the manifest itself self-updates. Restart `occlaude` to pick up changes (the running process keeps the old code in memory).
+
+If `installroot` is missing (e.g. you bootstrapped with an older `install.lua`), pass the URL explicitly:
+
+```sh
+occlaude --update https://raw.githubusercontent.com/Spirutural/occlaude/main
+```
+
+Or, if `occlaude` itself won't even start because a required lib is missing, force a clean bootstrap:
+
+```sh
+rm /home/install.lua
+wget https://raw.githubusercontent.com/Spirutural/occlaude/main/install.lua
+install.lua https://raw.githubusercontent.com/Spirutural/occlaude/main
+```
 
 ## Sessions
 

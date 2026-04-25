@@ -18,6 +18,7 @@ end
 base = base:gsub("/+$", "")
 
 local files = {
+  "install.lua",            -- self-update so future bootstraps stay in sync
   "bin/occlaude.lua",
   "lib/occlaude/json.lua",
   "lib/occlaude/api.lua",
