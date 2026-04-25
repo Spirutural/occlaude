@@ -157,6 +157,46 @@ local handlers = {
   write = write,
 }
 
+----------------------------------------------------------------------
+-- Optional: remote_bash via ocnodes. Registered only if ocnet.client
+-- is on the package path (i.e. ocnodes is installed on this machine).
+----------------------------------------------------------------------
+
+local ocnet_ok, ocnet_client = pcall(require, "ocnet.client")
+if ocnet_ok then
+  M.schemas[#M.schemas + 1] = {
+    name = "remote_bash",
+    description = "Run a shell command on a remote OpenComputers node by alias. Aliases are defined on this machine in /home/.ocnodes (one line per node: `<alias> <via> <address>`, where `via` is `wireless` or `linked:<local-modem-addr>`). Output is captured the same way as `bash`, with exit code propagated. Use this when the user names a remote node, references the personal-dim crops, or asks to operate on a machine other than this one. List defined aliases with `bash` running `ocsh --list`.",
+    input_schema = {
+      type = "object",
+      properties = {
+        alias   = { type = "string", description = "Alias of the remote node, as defined in /home/.ocnodes." },
+        command = { type = "string", description = "Shell command to run on the remote node." },
+        timeout = { type = "number", description = "Optional timeout in seconds (default 30)." },
+      },
+      required = { "alias", "command" },
+    },
+  }
+
+  handlers.remote_bash = function(input)
+    local alias = input.alias
+    local cmd   = input.command
+    if type(alias) ~= "string" or alias == "" then return "Error: alias must be a non-empty string", true end
+    if type(cmd)   ~= "string" or cmd   == "" then return "Error: command must be a non-empty string", true end
+    local timeout = tonumber(input.timeout) or 30
+
+    local out, exit_or_err = ocnet_client.exec(alias, cmd, timeout)
+    if out == nil then
+      return "remote: " .. tostring(exit_or_err), true
+    end
+    if exit_or_err ~= nil and exit_or_err ~= 0 then
+      return (out == "" and "(no output)" or out) .. "\n[exit " .. tostring(exit_or_err) .. "]", true
+    end
+    if out == "" then return "(no output)", false end
+    return out, false
+  end
+end
+
 -- Run a tool by name. Returns (result_string, is_error_bool).
 function M.run(name, input)
   local h = handlers[name]
