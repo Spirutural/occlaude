@@ -60,18 +60,35 @@ occlaude
 
 REPL commands:
 
-| Command       | What it does                       |
-|---------------|------------------------------------|
-| `/quit`       | Exit                               |
-| `/reset`      | Clear conversation history         |
-| `/model <id>` | Switch model mid-session           |
+| Command       | What it does                            |
+|---------------|-----------------------------------------|
+| `/quit`       | Exit                                    |
+| `/reset`      | Clear conversation history (mem + disk) |
+| `/model <id>` | Switch model mid-session                |
+| `/update`     | Pull the latest version and exit        |
 
 Flags:
 
 ```
+occlaude --continue                   # -c also works; resume the last session
 occlaude --model claude-haiku-4-5     # cheaper / faster
 occlaude --keyfile /etc/anthropic.key
+occlaude --update                     # self-update from the install root
 ```
+
+## Updating
+
+After the first install, `install.lua` writes the install root to `/home/.occlaude.installroot`. From then on you can update with:
+
+```sh
+occlaude --update
+```
+
+It re-fetches `install.lua` and runs it, so adding new files to the project just works as long as `install.lua`'s manifest stays current. Restart `occlaude` to pick up changes (the running process keeps the old code in memory).
+
+## Sessions
+
+Conversations persist to `/home/.occlaude.history` after every turn. Resume the most recent one with `occlaude -c`. Starting a fresh session without `-c` overwrites that slot on the first turn — there's only one slot. `/reset` clears it.
 
 ## Tools the model has
 

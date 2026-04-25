@@ -23,6 +23,7 @@ local files = {
   "lib/occlaude/api.lua",
   "lib/occlaude/tools.lua",
   "lib/occlaude/agent.lua",
+  "lib/occlaude/history.lua",
 }
 
 local function fetch(url)
@@ -63,6 +64,14 @@ for _, rel in ipairs(files) do
   io.write("ok (" .. #body .. " bytes) -> " .. dest .. "\n")
 end
 
+-- Remember the install root so `occlaude --update` can refetch later.
+local rf = io.open("/home/.occlaude.installroot", "w")
+if rf then
+  rf:write(base)
+  rf:close()
+end
+
 io.write("\nInstalled. Next steps:\n")
 io.write("  1. Save your API key:  echo sk-ant-... > /home/.occlaude.key\n")
 io.write("  2. Run:                occlaude\n")
+io.write("  Update later with:     occlaude --update\n")
